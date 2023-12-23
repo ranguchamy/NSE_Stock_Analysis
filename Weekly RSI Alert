@@ -1,0 +1,97 @@
+import yfinance as yf
+import pandas as pd
+from datetime import datetime, timedelta
+import smtplib
+from email.mime.text import MIMEText
+#yf.pdr_override() # <== that's all it takes :-)
+
+
+def calculate_weekly_rsi(symbol):
+
+
+    start_date = datetime.today() - timedelta(days=1460)
+    end_date = datetime.today()
+    
+    # Fetch historical price data
+    data = yf.download(ticker+".NS", start=start_date, end=end_date)
+    
+    # Calculate daily RSI using pandas_ta
+    data['daily_rsi'] = ta.rsi(close=data['Adj Close'], length=14)
+    
+    # Convert daily RSI to weekly RSI
+    weekly_rsi = data['daily_rsi'].resample('W').last()
+
+
+
+    return weekly_rsi
+
+def send_email(subject, body):
+    # Configure email settings
+    sender_email = "sender@email.com"
+    receiver_email = "reciever@email.com"
+    password = "usePassCodeInsteadOfPassword"
+
+
+    # Create email message
+    msg = MIMEText(body)
+    msg['Subject'] = subject
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+
+    
+    # Send email
+    try:
+        # Send email
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(sender_email, password)
+            server.sendmail(sender_email, receiver_email, msg.as_string())
+            print("Email sent successfully")
+    except Exception as e:
+        print(f"Error sending email: {e}")
+
+tickers = ['EIDPARRY']
+
+# Example tickers
+# tickers = [
+#     'TVSMOTOR', 'LICHSGFIN',
+#     'HINDZINC', 'PFC', 'ISEC', 'CASTROLIND', 'CREDITACC', 'IBULHSGFIN', 'ACI', 'VSTIND', 'COROMANDEL',
+#     'OFSS', 'MASFIN', 'ABSLAMC', 'BBTC', 'JAMNAAUTO', 'EIDPARRY', 'REDINGTON', 'COALINDIA', 'NMDC', 
+#     'JKPAPER', 'DRREDDY', 'RITES', 'MANAPPURAM', 'GUJGASLTD', 'VEDL', 'RAYMOND', 'SUNTV', 'IIFL', 'MUTHOOTFIN',
+#     'GRANULES', 'CANFINHOME', 'MGL', 'MRPL', 'KNRCON', 'DEEPAKFERT', 'PETRONET', 'RCF', 'ENGINERSIN', 'IGL',
+#     'GSPL', 'HEROMOTOCO', 'OIL', 'NCC', 'GESHIP', 'GODFRYPHLP', 'CHOLAHLDNG', 'GRINFRA', 'USHAMART', 'KRBL',
+#     'POONAWALLA', 'GNFC', 'JSL', 'AVANTIFEED', 'ARE&M', 'PCBL', 'NATCOPHARM', 'NESCO', 'WIPRO', 'CHAMBLFERT',
+#     'RENUKA', 'FSL', 'GPPL', 'TORNTPOWER', 'ZYDUSLIFE', 'ADANIPOWER', 'SHRIRAMFIN', 'RVNL', 'PNBHOUSING', 'RAIN',
+#     'UTIAMC', 'STARCEMENT', 'KPIL', 'DELTACORP', 'HEG', 'M&MFIN', 'GLENMARK', 'KANSAINER', 'SHYAMMETL', 'UPL',
+#     'JINDALSTEL', 'JINDALSAW', 'ASHOKLEY', 'MOTILALOFS', 'NATIONALUM', 'PNCINFRA', 'L&TFH', 'BALRAMCHIN', 'GICRE',
+#     'POWERGRID', 'EPL', 'M&M', 'NLCINDIA', 'TATASTEEL', 'RECLTD', 'INDUSTOWER', 'ONGC', 'GSFC', 'IRCON', 'SIS',
+#     'VTL', 'HUDCO', 'TATACHEM', 'HINDALCO', 'APOLLOTYRE', 'JMFINANCIL', 'RAJESHEXPO', 'NTPC', 'CEATLTD', 'IOC',
+#     'IRFC', 'UJJIVANSFB', 'BANDHANBNK', 'RHIM', 'JSWSTEEL', 'EQUITASBNK', 'ABCAPITAL', 'INDIGO', 'ZEEL', 'GRASIM',
+#     'GRAPHITE', 'INDUSINDBK', 'NHPC', 'GAIL', 'WELCORP', 'CUB', 'IDFCFIRSTB', 'TMB', 'TATAMOTORS', 'HDFCBANK',
+#     'CANBK', 'RBLBANK', 'CSBBANK', 'KOTAKBANK', 'UNIONBANK', 'FEDERALBNK', 'INDIANB', 'NAUKRI', 'IDBI', 'CESC',
+#     'ICICIBANK', 'BANKBARODA', 'MAHABANK', 'BPCL', 'SBIN', 'VMART', 'CENTRALBK', 'BANKINDIA', 'JUSTDIAL', 'PNB',
+#     'SAIL', 'PSB', 'ABFRL', 'GMRINFRA', 'JUBLPHARMA', 'PVRINOX', 'SUNTECK', 'PEL', 'NETWORK18', 'PPLPHARMA', 'LICI',
+#     'IDFC', 'BAJAJHLDNG', 'TEJASNET', 'INDIACEM', 'TTML', 'IDEA', 'ZOMATO', 'KIOCL', 'ITI', 'RBA', 'POLICYBZR',
+#     'DELHIVERY', 'HINDPETRO', 'ALOKINDS', 'PAYTM', 'SPARC', 'SWSOLAR'
+# ]
+
+# Print the updated list
+#print(tickers)
+
+# Example threshold
+threshold = 60
+
+# Loop through tickers
+for ticker in tickers:
+    # Calculate weekly RSI
+    weekly_rsi = calculate_weekly_rsi(ticker)
+
+    print(weekly_rsi)
+    print("Weekly RSI Value:", weekly_rsi.iloc[-1])
+    print("Threshold Value:", threshold)
+    
+    if weekly_rsi.iloc[-1] > threshold:
+        print("Condition is True")
+        send_email(f"{ticker} Weekly RSI Alert", f"The weekly RSI for {ticker} is above {weekly_rsi.iloc[-1]}.")
+    else:
+        print("Condition is False")
